@@ -76,7 +76,7 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
             read contact
             echo -e -n "Nickname $nick\nContactInfo $contact\n" >> /etc/tor/torrc
             echo -e "#\n#\n" >> /etc/tor/torrc
-        echo -e "\033[1;33m""[+] Congratz and thank you!\nYou're configured for relaying traffic.\nYou're helping the tor network propagate traffic.\nYou can see stats about your relay at https://globe.torproject.org\nStarting tor now.""\033[0m"
+        echo -e "\033[1;33m""[+] Congratz and thank you!\n[+] You're configured for relaying traffic.\n[+] You're helping the tor network propagate traffic.\n[+]You can see stats about your relay at https://globe.torproject.org\n[+] Starting tor now.""\033[0m"
         service tor start
         sleep 5
     else
@@ -89,11 +89,11 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
                     read nick
                     echo -e -n "Nickname $nick\n" >> /etc/tor/torrc
                     echo -e "#\n#\n" >> /etc/tor/torrc
-                echo -e "\033[1;33m""[+] Congratz and thank you!\nYou're configured to be a published bridge.\nNow you and others can use your bridge to mask tor traffic.\nYou can see stats about your bridge at https://globe.torproject.org\nStarting tor now.""\033[0m"
+                echo -e "\033[1;33m""[+] Congratz and thank you!\n[+] You're configured to be a published bridge.\n[+] Now you and others can use your bridge to mask tor traffic.\n[+] You can see stats about your bridge at https://globe.torproject.org\n[+] Starting tor now.""\033[0m"
                 sleep 5
             else
                 echo -e "ORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed\nPublishServerDescriptor 0" > /etc/tor/torrc
-                echo -e "\033[1;33m""[+] Congratz! You're configured for private bridge.\nYou can now use your bridges ip and dir port to mask your tor traffic.\nStarting tor now.""\033[0m"
+                echo -e "\033[1;33m""[+] Congratz! You're configured for private bridge.\n[+] You can now use your bridges ip and dir port to mask your tor traffic.\n[+] Starting tor now.""\033[0m"
                 service tor start
                 sleep 5
             fi
