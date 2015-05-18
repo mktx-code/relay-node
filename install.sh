@@ -144,7 +144,8 @@ echo -e "\033[1;33m""Do you want your node to be accessible to all or only tor u
          sleep 3
      else
          echo "onlynet=onion" >> /home/$bituser/.bitcoin/bitcoin.conf
-         echo -e "\033[1;33m""[+] Bitcoin is now configured to connect with only tor users\nas a hidden service with the url: $EXT_IP""\033[0m"
+         echo -e "\033[1;33m""[+] Bitcoin is now configured to connect with only tor users\nas a hidden service with the url:""\033[0m"
+         echo -e "\033[32m""$EXT_IP""\033[0m"
          sleep 3
      fi
 chown -R $bituser /home/$bituser/.bitcoin
