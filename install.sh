@@ -110,8 +110,8 @@ mkdir /root/bitcoinsrc && cd /root/bitcoinsrc
 echo -e "\033[1;33m""Getting bitcoin code from github""\033[0m"
 sleep 2
 git clone https://github.com/bitcoin/bitcoin
-git checkout master #Substitute with whatever version you prefer
 cd /root/bitcoinsrc/bitcoin
+git checkout master #Substitute with whatever version you prefer
 echo -e "\033[1;33m""Building bitcoin master branch""\033[0m"
 sleep 2
 ./autogen.sh
