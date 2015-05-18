@@ -18,20 +18,18 @@ echo -e "\033[1;33m""Do you need to update your repos to jessie? (y/n)""\033[0m"
     if [[ $install = Y || $install = y ]] ; then
         echo -e "\033[1;33m""Updating sources to jessie""\033[0m"
         sleep 1
-        echo "deb http://http.debian.net/debian/ jessie main non-free contrib" > /etc/apt/sources.list
+        echo "deb http://ftp.us.debian.org/debian jessie main non-free contrib" > /etc/apt/sources.list
         echo "deb http://security.debian.org/ jessie/updates main non-free contrib" >> /etc/apt/sources.list
         echo -e "\033[1;33m""[+] Sources updated to jessie.""\033[0m"
         sleep 3
     else
         echo -e "\033[1;33m""[+] Ok, moving on.""\033[0m"
-        sleep 3
+        sleep 1
     fi
 # #Upgrade packages install some dependencies ##
 echo -e "\033[1;33m""Upgrading installed packages.""\033[0m"
-sleep 2
 apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y
 echo -e "\033[1;33m""Installing some dependencies.""\033[0m"
-sleep 2
 apt-get install nano sudo pwgen haveged -y
 echo -e "\033[1;33m""If you're on a shared/virtual server you can't set the time.\nAre you on a shared server (answer y if you don't know)? (y/n)""\033[0m"
     read share
@@ -47,8 +45,8 @@ echo -e "\033[1;33m""If you're on a shared/virtual server you can't set the time
         sleep 3
     fi
 ## Collecting ext.ip before tor starts for use in the bitcoin.conf ##
-wget -q wtfismyip.com/text -O /tmp/ip
-IP=cat /tmp/ip
+sudo wget -q wtfismyip.com/text -O /root/ip
+IP=$(sudo cat /root/ip)
 ## Tor ##
 echo -e "\033[1;33m""Do you have tor, tor-arm, and obfsproxy already? (y/n)""\033[0m"
     read tor
@@ -76,7 +74,7 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
             read nick
         echo -e "\033[1;33m""What is your contact email?""\033[0m"
             read contact
-            echo -e -n "Nickname $nick\nContactInfo $contact" >> /etc/tor/torrc
+            echo -e -n "Nickname $nick\nContactInfo $contact\n" >> /etc/tor/torrc
             echo -e "#\n#\n" >> /etc/tor/torrc
         echo -e "\033[1;33m""[+] Congratz and thank you!\nYou're configured for relaying traffic.\nYou're helping the tor network propagate traffic.\nYou can see stats about your relay at https://globe.torproject.org\nStarting tor now.""\033[0m"
         service tor start
@@ -89,7 +87,8 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
                 echo -e "ORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed" > /etc/tor/torrc
                 echo -e "\033[1;33m""What would you like your bridge nickname to be?""\033[0m"
                     read nick
-                    echo "Nickname $nick" >> /etc/tor/torrc
+                    echo -e -n "Nickname $nick\n" >> /etc/tor/torrc
+                    echo -e "#\n#\n" >> /etc/tor/torrc
                 echo -e "\033[1;33m""[+] Congratz and thank you!\nYou're configured to be a published bridge.\nNow you and others can use your bridge to mask tor traffic.\nYou can see stats about your bridge at https://globe.torproject.org\nStarting tor now.""\033[0m"
                 sleep 5
             else
@@ -107,8 +106,8 @@ mkdir /root/bitcoinsrc && cd /root/bitcoinsrc
 echo -e "\033[1;33m""Getting bitcoin code from github""\033[0m"
 sleep 2
 git clone https://github.com/bitcoin/bitcoin
-cd /root/bitcoinsrc/bitcoin
 git checkout master #Substitute with whatever version you prefer
+cd /root/bitcoinsrc/bitcoin
 echo -e "\033[1;33m""Building bitcoin master branch""\033[0m"
 sleep 2
 ./autogen.sh
@@ -118,25 +117,24 @@ sudo make install
 echo -e "\033[1;33m""What would you like the bitcoin user to be named?""\033[0m"
     read bituser
 adduser $bituser
-sleep 1
 adduser $bituser sudo
-sleep 1
 mkdir /home/$bituser/.bitcoin
 echo -e "\033[1;33m""[+] Bitcoin built and user $bituser added to your system to run bitcoin.""\033[0m"
 sleep 3
 ## Set up tor to host a hidden service ##
 echo -e "\033[1;33m""Setting up tor to host a hidden service for bitcoin.""\033[0m"
-echo -e "HiddenServiceDir /var/lib/tor/bitcoin-server/\nHiddenServicePort 127.0.0.1:8333\nSocksPort 127.0.0.1:9050" >> /etc/tor/torrc
+echo -e "HiddenServiceDir /var/lib/tor/bitcoin-server/\nHiddenServicePort 8333 127.0.0.1:8333\n" >> /etc/tor/torrc
 service tor reload
 sleep 2
-EXT_IP=cat /var/lib/tor/bitcoin-server/hostname
-echo -e "\033[1;33m""[+] Tor is set up. Your hidden service address is $EXT_IP""\033[0m"
+EXT_IP=$(sudo cat /var/lib/tor/bitcoin-server/hostname)
+echo -e "\033[1;33m""[+] Tor is set up. Your hidden service address is:""\033[0m"
+echo -e "\033[32m""$EXT_IP""\033[0m"
 sleep 3
 ## Configure bitcoin ##
 echo -e "\033[1;33m""Now we will configure bitcoin""\033[0m"
 sleep 3
-RPC_PASS=pwgen -ns 68 1
-RPC_USER=user$(pwgen -Bns 10 1)
+RPC_PASS=$(pwgen -n -s 68 1)
+RPC_USER=user$(pwgen -B -n -s 10 1)
 echo -e "daemon=1\nrpcuser=$RPC_USER\nrpcpassword=$RPC_PASS\nmaxconnections=700\nproxy=127.0.0.1:9050\nexternalip=$EXT_IP\nlisten=1\nbind=127.0.0.1:8333" > /home/$bituser/.bitcoin/bitcoin.conf
 echo -e "\033[1;33m""Do you want your node to be accessible to all or only tor users? (all/tor)""\033[0m"
      read tor_all
@@ -150,25 +148,28 @@ echo -e "\033[1;33m""Do you want your node to be accessible to all or only tor u
          sleep 3
      fi
 chown -R $bituser /home/$bituser/.bitcoin
-echo -e "\033[1;33m""Do you want bitcoin to run on startup (y/n)?""\033{0m"
+echo -e "\033[1;33m""Do you want bitcoin to run on startup (y/n)?""\033[0m"
     read startup
     if [[ $startup = Y || $startup = y ]]; then
         echo "sudo -u $user -i bitcoind\nexit 0" > /etc/rc.local
         echo -e "\033[1;33m""[+] Added to /etc/rc.local""\033[0m"
         sleep 3
     else
-        echo -e "\033[1;33m""[+] To run bitcoin do:\nsudo -u $bituser -i bitcoind""\033[0m"
+        echo -e "\033[1;33m""[+] To run bitcoin do:""\033[0m"
+        echo -e "\033[32m""sudo -u $bituser -i bitcoind""\033[0m"
         sleep 5
     fi
 sudo -u $user -i bitcoind
-echo -e "\033[1;33m""[+] Bitcoin is now running you can check the log by doing:\ntail -f /home/$user/.bitcoin/debug-log""\033[3m"
-echo -e "\033[1;33m""Or by doing\nsudo -u $user -i bitcoin-cli getinfo""\033[0m"
+echo -e "\033[1;33m""[+] Bitcoin is now running you can check the log by doing:""\033[0m"
+echo -e "\033[32m""tail -f /home/$user/.bitcoin/debug-log""\033[3m"
+echo -e "\033[1;33m""Or:""\033[0m" 
+echo -e "\033[32m""sudo -u $user -i bitcoin-cli getinfo""\033[0m"
 sleep 5
 ## Rotate log files ##
 echo -e "\033[1;33m""Setting up logfiles to prune in a reasonable\nway to save disk space.""\033[0m"
-sleep 2
+sleep 3
 echo -e "/home/$bituser/.bitcoin/debug.log {\nrotate 5\ncopytruncate\ndaily\nmissingok\nnotifempty\ncompress\ndelaycompress\ncreate 0640 $bituser adm\n}" > /etc/logrotate.d/bitcoind
 logrotate -f bitcoind
 echo -e "\033[1;33m""[+] Logfiles set to rotate automatically.""\033[0m"
-sleep 2
+sleep 3
 exit 0
