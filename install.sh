@@ -109,15 +109,15 @@ apt-get install pwgen git automake pkg-config build-essential libtool autotools-
 mkdir /root/bitcoinsrc && cd /root/bitcoinsrc
 echo -e "\033[1;33m""Getting bitcoin code from github""\033[0m"
 sleep 2
-#git clone https://github.com/bitcoin/bitcoin
-#git checkout master #Substitute with whatever version you prefer
-#cd /root/bitcoinsrc/bitcoin
-#echo -e "\033[1;33m""Building bitcoin master branch""\033[0m"
-#sleep 2
-#./autogen.sh
-#./configure --disable-wallet --without-gui --with-cli --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
-#make
-#sudo make install
+git clone https://github.com/bitcoin/bitcoin
+git checkout master #Substitute with whatever version you prefer
+cd /root/bitcoinsrc/bitcoin
+echo -e "\033[1;33m""Building bitcoin master branch""\033[0m"
+sleep 2
+./autogen.sh
+./configure --disable-wallet --without-gui --with-cli --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+make
+sudo make install
 echo -e "\033[1;33m""What would you like the bitcoin user to be named?""\033[0m"
     read bituser
 adduser $bituser
@@ -128,12 +128,12 @@ sleep 3
 ## Set up tor to host a hidden service ##
 echo -e "\033[1;33m""Setting up tor to host a hidden service for bitcoin.""\033[0m"
 echo -e "HiddenServiceDir /var/lib/tor/bitcoin-server/\nHiddenServicePort 8333 127.0.0.1:8333\n" >> /etc/tor/torrc
-sudo -u debian-tor -i service tor reload
+service tor reload
 sleep 2
 EXT_IP=$(sudo cat /var/lib/tor/bitcoin-server/hostname)
 echo -e "\033[1;33m""[+] Tor is set up. Your hidden service address is:""\033[0m"
 echo -e "\033[32m""$EXT_IP""\033[0m"
-sleep 3
+sleep 7
 ## Configure bitcoin ##
 echo -e "\033[1;33m""Now we will configure bitcoin""\033[0m"
 sleep 3
@@ -166,10 +166,10 @@ echo -e "\033[1;33m""Do you want bitcoin to run on startup (y/n)?""\033[0m"
     fi
 sudo -u $bituser -i bitcoind
 echo -e "\033[1;33m""[+] Bitcoin is now running you can check the log by doing:""\033[0m"
-echo -e "\033[32m""tail -f /home/$bituser/.bitcoin/debug-log""\033[3m"
+echo -e "\033[32m""tail -f /home/$bituser/.bitcoin/debug-log""\033[0m"
 echo -e "\033[1;33m""Or:""\033[0m"
 echo -e "\033[32m""sudo -u $bituser -i bitcoin-cli getinfo""\033[0m"
-sleep 5
+sleep 7
 ## Rotate log files ##
 echo -e "\033[1;33m""Setting up logfiles to prune in a reasonable\nway to save disk space.""\033[0m"
 sleep 3
