@@ -6,6 +6,7 @@
 #
 #
 ## Check for root ##
+set -e
 if [ $UID -ne 0 ]; then
     echo -e "\033[1;33m""This program must be run as root.""\033[0m"
     sleep 2
