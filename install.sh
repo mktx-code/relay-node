@@ -84,6 +84,7 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
             read pub_priv
             if [[ $pub_priv = pub ]]; then
                 service tor stop
+                mv /etc/tor/torrc /etc/tor/torrc.bak
                 echo -e "ORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed" > /etc/tor/torrc
                 echo -e "\033[1;33m""What would you like your bridge nickname to be?""\033[0m"
                     read nick
@@ -91,7 +92,10 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
                     echo -e "#\n#\n" >> /etc/tor/torrc
                 echo -e "\033[1;33m""[+] Congratz and thank you!\n[+] You're configured to be a published bridge.\n[+] Now you and others can use your bridge to mask tor traffic.\n[+] You can see stats about your bridge at https://globe.torproject.org\n[+] Starting tor now.""\033[0m"
                 sleep 5
+                service tor start
             else
+                service tor stop
+                mv /etc/tor/torrc /etc/tor/torrc.bak
                 echo -e "ORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed\nPublishServerDescriptor 0" > /etc/tor/torrc
                 echo -e "\033[1;33m""[+] Congratz! You're configured for private bridge.\n[+] You can now use your bridges ip and dir port to mask your tor traffic.\n[+] Starting tor now.""\033[0m"
                 service tor start
@@ -105,15 +109,15 @@ apt-get install pwgen git automake pkg-config build-essential libtool autotools-
 mkdir /root/bitcoinsrc && cd /root/bitcoinsrc
 echo -e "\033[1;33m""Getting bitcoin code from github""\033[0m"
 sleep 2
-git clone https://github.com/bitcoin/bitcoin
-git checkout master #Substitute with whatever version you prefer
-cd /root/bitcoinsrc/bitcoin
-echo -e "\033[1;33m""Building bitcoin master branch""\033[0m"
-sleep 2
-./autogen.sh
-./configure --disable-wallet --without-gui --with-cli --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
-make
-sudo make install
+#git clone https://github.com/bitcoin/bitcoin
+#git checkout master #Substitute with whatever version you prefer
+#cd /root/bitcoinsrc/bitcoin
+#echo -e "\033[1;33m""Building bitcoin master branch""\033[0m"
+#sleep 2
+#./autogen.sh
+#./configure --disable-wallet --without-gui --with-cli --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+#make
+#sudo make install
 echo -e "\033[1;33m""What would you like the bitcoin user to be named?""\033[0m"
     read bituser
 adduser $bituser
@@ -124,7 +128,7 @@ sleep 3
 ## Set up tor to host a hidden service ##
 echo -e "\033[1;33m""Setting up tor to host a hidden service for bitcoin.""\033[0m"
 echo -e "HiddenServiceDir /var/lib/tor/bitcoin-server/\nHiddenServicePort 8333 127.0.0.1:8333\n" >> /etc/tor/torrc
-service tor reload
+sudo -u debian-tor -i service tor reload
 sleep 2
 EXT_IP=$(sudo cat /var/lib/tor/bitcoin-server/hostname)
 echo -e "\033[1;33m""[+] Tor is set up. Your hidden service address is:""\033[0m"
@@ -160,17 +164,17 @@ echo -e "\033[1;33m""Do you want bitcoin to run on startup (y/n)?""\033[0m"
         echo -e "\033[32m""sudo -u $bituser -i bitcoind""\033[0m"
         sleep 5
     fi
-sudo -u $user -i bitcoind
+sudo -u $bituser -i bitcoind
 echo -e "\033[1;33m""[+] Bitcoin is now running you can check the log by doing:""\033[0m"
-echo -e "\033[32m""tail -f /home/$user/.bitcoin/debug-log""\033[3m"
-echo -e "\033[1;33m""Or:""\033[0m" 
-echo -e "\033[32m""sudo -u $user -i bitcoin-cli getinfo""\033[0m"
+echo -e "\033[32m""tail -f /home/$bituser/.bitcoin/debug-log""\033[3m"
+echo -e "\033[1;33m""Or:""\033[0m"
+echo -e "\033[32m""sudo -u $bituser -i bitcoin-cli getinfo""\033[0m"
 sleep 5
 ## Rotate log files ##
 echo -e "\033[1;33m""Setting up logfiles to prune in a reasonable\nway to save disk space.""\033[0m"
 sleep 3
 echo -e "/home/$bituser/.bitcoin/debug.log {\nrotate 5\ncopytruncate\ndaily\nmissingok\nnotifempty\ncompress\ndelaycompress\ncreate 0640 $bituser adm\n}" > /etc/logrotate.d/bitcoind
-logrotate -f bitcoind
+logrotate -f /etc/logrotate.d/bitcoind
 echo -e "\033[1;33m""[+] Logfiles set to rotate automatically.""\033[0m"
 sleep 3
 exit 0
