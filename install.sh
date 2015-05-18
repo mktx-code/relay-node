@@ -11,7 +11,6 @@ if [ $UID -ne 0 ]; then
     sleep 2
     exit 0
     fi
-
 ## Update sources to jessie ##
 echo -e "\033[1;33m""Do you need to update your repos to jessie? (y/n)""\033[0m"
     read install
@@ -85,7 +84,7 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
             if [[ $pub_priv = pub ]]; then
                 service tor stop
                 mv /etc/tor/torrc /etc/tor/torrc.bak
-                echo -e "ORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed" > /etc/tor/torrc
+                echo -e "ORPort 11443\nExtORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed" > /etc/tor/torrc
                 echo -e "\033[1;33m""What would you like your bridge nickname to be?""\033[0m"
                     read nick
                     echo -e -n "Nickname $nick\n" >> /etc/tor/torrc
@@ -96,7 +95,7 @@ echo -e "\033[1;33m""Do you want to run a relay or a public/private bridge? (rel
             else
                 service tor stop
                 mv /etc/tor/torrc /etc/tor/torrc.bak
-                echo -e "ORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed\nPublishServerDescriptor 0" > /etc/tor/torrc
+                echo -e "ORPort11443\nExtORPort 22443\nDNSPort 53\nSocksPort 127.0.0.1:9050\nControlPort 127.0.0.1:9051\nExitPolicy reject *:*\nDisableDebuggerAttachment 0\nBridgeRelay 1\nServerTransportPlugin obfs3,scramblesuit exec /usr/bin/obfsproxy managed\nPublishServerDescriptor 0" > /etc/tor/torrc
                 echo -e "\033[1;33m""[+] Congratz! You're configured for private bridge.\n[+] You can now use your bridges ip and dir port to mask your tor traffic.\n[+] Starting tor now.""\033[0m"
                 service tor start
                 sleep 5
@@ -143,8 +142,11 @@ echo -e "daemon=1\nrpcuser=$RPC_USER\nrpcpassword=$RPC_PASS\nmaxconnections=700\
 echo -e "\033[1;33m""Do you want your node to be accessible to all or only tor users? (all/tor)""\033[0m"
      read tor_all
      if [[ $tor_all = all ]]; then
-         echo -e "bind=0.0.0.0\nexternalip=$IP" >> /home/$bituser/.bitcoin/bitcoin.conf
-         echo -e "\033[1;33m""[+] Bitcoin is now configured to connect to all users\nas both a hidden service and a clearnet ip.""\033[0m"
+         echo -e "bind=0.0.0.0:8334\nexternalip=$IP" >> /home/$bituser/.bitcoin/bitcoin.conf
+         echo -e "\033[1;33m""[+] Bitcoin is now configured to connect to all users\nas both a hidden service:""\033[0m"
+         echo -e "\033[32m""$EXT_IP""\033[0m"
+         echo -e "\033[1;33m""and a clearnet ip""\033[0m"
+         echo -e "\033[32m""$IP""\033[0m"
          sleep 3
      else
          echo "onlynet=onion" >> /home/$bituser/.bitcoin/bitcoin.conf
@@ -165,6 +167,8 @@ echo -e "\033[1;33m""Do you want bitcoin to run on startup (y/n)?""\033[0m"
         sleep 5
     fi
 sudo -u $bituser -i bitcoind
+sleep 2
+service tor reload
 echo -e "\033[1;33m""[+] Bitcoin is now running you can check the log by doing:""\033[0m"
 echo -e "\033[32m""tail -f /home/$bituser/.bitcoin/debug-log""\033[0m"
 echo -e "\033[1;33m""Or:""\033[0m"
