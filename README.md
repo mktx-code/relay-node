@@ -15,3 +15,4 @@ To do:
 
 1. Add ivp6 support for tor.
 2. Add electrum install and config.
+3. Add warning/directions doc for setting up ssh keys.
