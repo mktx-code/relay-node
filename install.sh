@@ -183,3 +183,4 @@ logrotate -f /etc/logrotate.d/bitcoind
 echo -e "\033[1;33m""[+] Logfiles set to rotate automatically.""\033[0m"
 sleep 3
 exit 0
+
